@@ -415,46 +415,7 @@ Charts
 
 ## Forecast Dashboard
 
-Displays
 
-- 7-Day Forecast
-- Daily Temperature
-- Rain Probability
-- Wind Forecast
-
----
-
-## Historical Dashboard
-
-Compare
-
-- Today
-- Yesterday
-- Last Week
-- Last Month
-- Previous Year
-
----
-
-## Rainfall Dashboard
-
-Includes
-
-- Rainfall Trend
-- Monthly Rainfall
-- Highest Rainfall Cities
-- Rainfall Heatmap
-
----
-
-## Marine Dashboard
-
-Displays
-
-- Wave Height
-- Sea Temperature
-- Wind Speed
-- Marine Conditions
 
 ---
 
@@ -599,6 +560,11 @@ This platform can be extended to include
 - Streaming Data Pipelines
 
 ---
+DashBoard 
+<img width="1541" height="839" alt="image" src="https://github.com/user-attachments/assets/9b043832-15b0-4898-8212-0700291e944b" />
+<img width="1735" height="797" alt="image" src="https://github.com/user-attachments/assets/b4c700d6-d8fc-4b28-b7fd-98509bdbc64d" />
+<img width="1537" height="614" alt="image" src="https://github.com/user-attachments/assets/a5cbbe88-efc0-4b9d-9d85-f28d7365822a" />
+
 
 # 📜 License
 
