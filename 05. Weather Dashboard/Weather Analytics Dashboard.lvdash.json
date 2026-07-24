@@ -1,0 +1,2006 @@
+{
+  "datasets": [
+    {
+      "name": "current_weather_gold",
+      "displayName": "Current Weather Gold",
+      "queryLines": [
+        "SELECT\n",
+        "  city,\n",
+        "  temperature,\n",
+        "  feels_like,\n",
+        "  humidity,\n",
+        "  pressure,\n",
+        "  visibility,\n",
+        "  wind_speed,\n",
+        "  wind_direction,\n",
+        "  country,\n",
+        "  latitude,\n",
+        "  longitude,\n",
+        "  load_dt_tm,\n",
+        "  update_dt_tm\n",
+        "FROM\n",
+        "  current_weather_summary\n",
+        "ORDER BY\n",
+        "  update_dt_tm DESC"
+      ],
+      "catalog": "weather",
+      "schema": "gold"
+    },
+    {
+      "name": "forecast_weather_gold",
+      "displayName": "Forecast Weather Gold",
+      "queryLines": [
+        "SELECT\n",
+        "  city,\n",
+        "  forecast_date,\n",
+        "  maxtemp,\n",
+        "  mintemp,\n",
+        "  avgtemp,\n",
+        "  sunhour,\n",
+        "  uv_index,\n",
+        "  co,\n",
+        "  pm10,\n",
+        "  load_dt_tm\n",
+        "FROM\n",
+        "  forecast_weather_summary\n",
+        "ORDER BY\n",
+        "  forecast_date"
+      ],
+      "catalog": "weather",
+      "schema": "gold"
+    },
+    {
+      "name": "air_quality_gold",
+      "displayName": "Air Quality Gold",
+      "queryLines": [
+        "SELECT\n",
+        "  city,\n",
+        "  co,\n",
+        "  no2,\n",
+        "  o3,\n",
+        "  pm10,\n",
+        "  pm25\n",
+        "FROM\n",
+        "  air_quality_summary"
+      ],
+      "catalog": "weather",
+      "schema": "gold"
+    },
+    {
+      "name": "weather_trends",
+      "displayName": "Weather Trends",
+      "queryLines": [
+        "SELECT\n",
+        "  city,\n",
+        "  DATE(update_dt_tm) as date,\n",
+        "  AVG(temperature) as avg_temperature,\n",
+        "  AVG(humidity) as avg_humidity,\n",
+        "  AVG(wind_speed) as avg_wind_speed\n",
+        "FROM\n",
+        "  current_weather_summary\n",
+        "GROUP BY\n",
+        "  city,\n",
+        "  DATE(update_dt_tm)\n",
+        "ORDER BY\n",
+        "  date DESC"
+      ],
+      "catalog": "weather",
+      "schema": "gold"
+    },
+    {
+      "name": "city_comparison",
+      "displayName": "City Comparison",
+      "queryLines": [
+        "SELECT\n",
+        "  city,\n",
+        "  country,\n",
+        "  temperature,\n",
+        "  humidity,\n",
+        "  wind_speed,\n",
+        "  visibility,\n",
+        "  pressure,\n",
+        "  latitude,\n",
+        "  longitude\n",
+        "FROM\n",
+        "  current_weather_summary\n",
+        "ORDER BY\n",
+        "  temperature DESC"
+      ],
+      "catalog": "weather",
+      "schema": "gold"
+    },
+    {
+      "name": "pipeline_metrics",
+      "displayName": "Pipeline Metrics",
+      "queryLines": [
+        "SELECT\n",
+        "  'Current Weather' as data_source,\n",
+        "  COUNT(*) as record_count,\n",
+        "  MAX(update_dt_tm) as last_refresh,\n",
+        "  DATEDIFF(NOW(), MAX(update_dt_tm)) as days_since_refresh,\n",
+        "  CASE\n",
+        "    WHEN DATEDIFF(NOW(), MAX(update_dt_tm)) <= 1 THEN 'Fresh'\n",
+        "    WHEN DATEDIFF(NOW(), MAX(update_dt_tm)) <= 3 THEN 'Moderate'\n",
+        "    ELSE 'Stale'\n",
+        "  END as data_freshness\n",
+        "FROM\n",
+        "  current_weather_summary\n",
+        "UNION ALL\n",
+        "SELECT\n",
+        "  'Forecast Weather' as data_source,\n",
+        "  COUNT(*) as record_count,\n",
+        "  MAX(load_dt_tm) as last_refresh,\n",
+        "  DATEDIFF(NOW(), MAX(load_dt_tm)) as days_since_refresh,\n",
+        "  CASE\n",
+        "    WHEN DATEDIFF(NOW(), MAX(load_dt_tm)) <= 1 THEN 'Fresh'\n",
+        "    WHEN DATEDIFF(NOW(), MAX(load_dt_tm)) <= 3 THEN 'Moderate'\n",
+        "    ELSE 'Stale'\n",
+        "  END as data_freshness\n",
+        "FROM\n",
+        "  forecast_weather_summary"
+      ],
+      "catalog": "weather",
+      "schema": "gold"
+    }
+  ],
+  "pages": [
+    {
+      "name": "595540cc",
+      "displayName": "Executive Overview",
+      "layout": [
+        {
+          "widget": {
+            "name": "header_main",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Executive Weather Overview"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "header_kpi",
+            "multilineTextboxSpec": {
+              "lines": [
+                "### Latest Weather Conditions"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "temperature",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "current_weather_gold",
+                  "fields": [
+                    {
+                      "name": "temperature",
+                      "expression": "`temperature`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "🌡️ Temperature",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "temperature",
+                  "rowNumber": 0,
+                  "formatTemplate": "{{@formatted}}°C"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "feels_like",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "current_weather_gold",
+                  "fields": [
+                    {
+                      "name": "feels_like",
+                      "expression": "`feels_like`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "🤒 Feels Like",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "feels_like",
+                  "rowNumber": 0,
+                  "formatTemplate": "{{@formatted}}°C"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 3,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "humidity",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "current_weather_gold",
+                  "fields": [
+                    {
+                      "name": "humidity",
+                      "expression": "`humidity`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "💧 Humidity",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "humidity",
+                  "rowNumber": 0,
+                  "formatTemplate": "{{@formatted}}%"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 3,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "wind_speed",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "current_weather_gold",
+                  "fields": [
+                    {
+                      "name": "wind_speed",
+                      "expression": "`wind_speed`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "🌬️ Wind Speed",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "wind_speed",
+                  "rowNumber": 0,
+                  "formatTemplate": "{{@formatted}} km/h"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 3,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "pressure",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "current_weather_gold",
+                  "fields": [
+                    {
+                      "name": "pressure",
+                      "expression": "`pressure`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "📊 Pressure",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "pressure",
+                  "rowNumber": 0,
+                  "formatTemplate": "{{@formatted}} mb"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "visibility",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "current_weather_gold",
+                  "fields": [
+                    {
+                      "name": "visibility",
+                      "expression": "`visibility`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "👁️ Visibility",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "visibility",
+                  "rowNumber": 0,
+                  "formatTemplate": "{{@formatted}} km"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 6,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "wind_dir",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "current_weather_gold",
+                  "fields": [
+                    {
+                      "name": "wind_direction",
+                      "expression": "`wind_direction`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "🧭 Wind Direction",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "wind_direction",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 6,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "header_summary",
+            "multilineTextboxSpec": {
+              "lines": [
+                "### Current Weather Summary"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "summary_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "current_weather_gold",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "country",
+                      "expression": "`country`"
+                    },
+                    {
+                      "name": "temperature",
+                      "expression": "`temperature`"
+                    },
+                    {
+                      "name": "humidity",
+                      "expression": "`humidity`"
+                    },
+                    {
+                      "name": "wind_speed",
+                      "expression": "`wind_speed`"
+                    },
+                    {
+                      "name": "update_dt_tm",
+                      "expression": "`update_dt_tm`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Current Weather Details",
+                "showTitle": true
+              },
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "city"
+                  },
+                  {
+                    "fieldName": "country"
+                  },
+                  {
+                    "fieldName": "temperature"
+                  },
+                  {
+                    "fieldName": "humidity"
+                  },
+                  {
+                    "fieldName": "wind_speed"
+                  },
+                  {
+                    "fieldName": "update_dt_tm"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 6,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "header_air",
+            "multilineTextboxSpec": {
+              "lines": [
+                "### Air Quality Metrics"
+              ]
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 10,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "pm25",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "air_quality_gold",
+                  "fields": [
+                    {
+                      "name": "pm25",
+                      "expression": "`pm25`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "PM2.5",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "pm25",
+                  "rowNumber": 0,
+                  "formatTemplate": "{{@formatted}} µg/m³"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 11,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "pm10",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "air_quality_gold",
+                  "fields": [
+                    {
+                      "name": "pm10",
+                      "expression": "`pm10`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "PM10",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "pm10",
+                  "rowNumber": 0,
+                  "formatTemplate": "{{@formatted}} µg/m³"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 11,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "air_quality_chart",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "air_quality_gold",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "sum(pm25)",
+                      "expression": "SUM(`pm25`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Air Quality Overview",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "city",
+                  "displayName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(pm25)",
+                  "displayName": "pm25",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "city",
+                  "displayName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 14,
+            "width": 12,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "forecast",
+      "displayName": "Weather Forecast",
+      "layout": [
+        {
+          "widget": {
+            "name": "header_main",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Weather Forecast Analysis"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "temp_forecast",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "forecast_weather_gold",
+                  "fields": [
+                    {
+                      "name": "forecast_date",
+                      "expression": "`forecast_date`"
+                    },
+                    {
+                      "name": "sum(maxtemp)",
+                      "expression": "SUM(`maxtemp`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Temperature Forecast",
+                "showTitle": true
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "forecast_date",
+                  "displayName": "forecast_date",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(maxtemp)",
+                  "displayName": "maxtemp",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "temp_comparison",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "forecast_weather_gold",
+                  "fields": [
+                    {
+                      "name": "forecast_date",
+                      "expression": "`forecast_date`"
+                    },
+                    {
+                      "name": "sum(maxtemp)",
+                      "expression": "SUM(`maxtemp`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Max vs Min Temperature",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "forecast_date",
+                  "displayName": "forecast_date",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(maxtemp)",
+                  "displayName": "maxtemp",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "forecast_date",
+                  "displayName": "forecast_date",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 1,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "sunshine",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "forecast_weather_gold",
+                  "fields": [
+                    {
+                      "name": "forecast_date",
+                      "expression": "`forecast_date`"
+                    },
+                    {
+                      "name": "sum(sunhour)",
+                      "expression": "SUM(`sunhour`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Sunshine Hours",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "forecast_date",
+                  "displayName": "forecast_date",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(sunhour)",
+                  "displayName": "sunhour",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "forecast_date",
+                  "displayName": "forecast_date",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "uv_forecast",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "forecast_weather_gold",
+                  "fields": [
+                    {
+                      "name": "forecast_date",
+                      "expression": "`forecast_date`"
+                    },
+                    {
+                      "name": "sum(uv_index)",
+                      "expression": "SUM(`uv_index`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "UV Index Forecast",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "forecast_date",
+                  "displayName": "forecast_date",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(uv_index)",
+                  "displayName": "uv_index",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "forecast_date",
+                  "displayName": "forecast_date",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 6,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "header_table",
+            "multilineTextboxSpec": {
+              "lines": [
+                "### Detailed Forecast"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "forecast_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "forecast_weather_gold",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "forecast_date",
+                      "expression": "`forecast_date`"
+                    },
+                    {
+                      "name": "maxtemp",
+                      "expression": "`maxtemp`"
+                    },
+                    {
+                      "name": "mintemp",
+                      "expression": "`mintemp`"
+                    },
+                    {
+                      "name": "avgtemp",
+                      "expression": "`avgtemp`"
+                    },
+                    {
+                      "name": "sunhour",
+                      "expression": "`sunhour`"
+                    },
+                    {
+                      "name": "uv_index",
+                      "expression": "`uv_index`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Forecast Summary Table",
+                "showTitle": true
+              },
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "city"
+                  },
+                  {
+                    "fieldName": "forecast_date"
+                  },
+                  {
+                    "fieldName": "maxtemp"
+                  },
+                  {
+                    "fieldName": "mintemp"
+                  },
+                  {
+                    "fieldName": "avgtemp"
+                  },
+                  {
+                    "fieldName": "sunhour"
+                  },
+                  {
+                    "fieldName": "uv_index"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 12,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "trends",
+      "displayName": "Trend Analysis",
+      "layout": [
+        {
+          "widget": {
+            "name": "header_main",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Weather Trend Analysis"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "temp_trend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "weather_trends",
+                  "fields": [
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    },
+                    {
+                      "name": "avg(avg_temperature)",
+                      "expression": "AVG(`avg_temperature`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Temperature Trend",
+                "showTitle": true
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "date",
+                  "displayName": "date",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "avg(avg_temperature)",
+                  "displayName": "avg_temperature",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "humidity_trend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "weather_trends",
+                  "fields": [
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    },
+                    {
+                      "name": "avg(avg_humidity)",
+                      "expression": "AVG(`avg_humidity`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Humidity Trend",
+                "showTitle": true
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "date",
+                  "displayName": "date",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "avg(avg_humidity)",
+                  "displayName": "avg_humidity",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 1,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "wind_trend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "weather_trends",
+                  "fields": [
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    },
+                    {
+                      "name": "avg(avg_wind_speed)",
+                      "expression": "AVG(`avg_wind_speed`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Wind Speed Analysis",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "date",
+                  "displayName": "date",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "avg(avg_wind_speed)",
+                  "displayName": "avg_wind_speed",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "date",
+                  "displayName": "date",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 12,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "comparison",
+      "displayName": "City Comparison",
+      "layout": [
+        {
+          "widget": {
+            "name": "header_main",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# City Weather Comparison"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "comparison_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "city_comparison",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "country",
+                      "expression": "`country`"
+                    },
+                    {
+                      "name": "temperature",
+                      "expression": "`temperature`"
+                    },
+                    {
+                      "name": "humidity",
+                      "expression": "`humidity`"
+                    },
+                    {
+                      "name": "wind_speed",
+                      "expression": "`wind_speed`"
+                    },
+                    {
+                      "name": "visibility",
+                      "expression": "`visibility`"
+                    },
+                    {
+                      "name": "pressure",
+                      "expression": "`pressure`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "City Comparison Table",
+                "showTitle": true
+              },
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "city"
+                  },
+                  {
+                    "fieldName": "country"
+                  },
+                  {
+                    "fieldName": "temperature"
+                  },
+                  {
+                    "fieldName": "humidity"
+                  },
+                  {
+                    "fieldName": "wind_speed"
+                  },
+                  {
+                    "fieldName": "visibility"
+                  },
+                  {
+                    "fieldName": "pressure"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "hottest",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "city_comparison",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "sum(temperature)",
+                      "expression": "SUM(`temperature`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Top 5 Hottest Cities",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "city",
+                  "displayName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(temperature)",
+                  "displayName": "temperature",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "city",
+                  "displayName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 7,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "windiest",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "city_comparison",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "sum(wind_speed)",
+                      "expression": "SUM(`wind_speed`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Top 5 Highest Wind Speed",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "city",
+                  "displayName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(wind_speed)",
+                  "displayName": "wind_speed",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "city",
+                  "displayName": "city",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 7,
+            "width": 6,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "monitoring",
+      "displayName": "Data Monitoring",
+      "layout": [
+        {
+          "widget": {
+            "name": "header_main",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Data Monitoring Dashboard"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "header_metrics",
+            "multilineTextboxSpec": {
+              "lines": [
+                "### Pipeline Metrics"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 12,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "record_count",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "pipeline_metrics",
+                  "fields": [
+                    {
+                      "name": "sum(record_count)",
+                      "expression": "SUM(`record_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Total Records",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(record_count)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "source_count",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "pipeline_metrics",
+                  "fields": [
+                    {
+                      "name": "count(data_source)",
+                      "expression": "COUNT(`data_source`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Data Sources",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "count(data_source)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "days_refresh",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "pipeline_metrics",
+                  "fields": [
+                    {
+                      "name": "avg(days_since_refresh)",
+                      "expression": "AVG(`days_since_refresh`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Days Since Refresh",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(days_since_refresh)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 2,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "pipeline_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "pipeline_metrics",
+                  "fields": [
+                    {
+                      "name": "data_source",
+                      "expression": "`data_source`"
+                    },
+                    {
+                      "name": "record_count",
+                      "expression": "`record_count`"
+                    },
+                    {
+                      "name": "last_refresh",
+                      "expression": "`last_refresh`"
+                    },
+                    {
+                      "name": "days_since_refresh",
+                      "expression": "`days_since_refresh`"
+                    },
+                    {
+                      "name": "data_freshness",
+                      "expression": "`data_freshness`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Pipeline Monitoring Table",
+                "showTitle": true
+              },
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "data_source"
+                  },
+                  {
+                    "fieldName": "record_count"
+                  },
+                  {
+                    "fieldName": "last_refresh"
+                  },
+                  {
+                    "fieldName": "days_since_refresh"
+                  },
+                  {
+                    "fieldName": "data_freshness"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "global_filters",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "city_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f1877997fe1a1bab211235772876ef/datasets/01f1877ac0df18ee93c5eec8d4eff0fc_city",
+                "query": {
+                  "datasetName": "current_weather_gold",
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "city_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Select City",
+                "showTitle": true
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "city",
+                    "queryName": "dashboards/01f1877997fe1a1bab211235772876ef/datasets/01f1877ac0df18ee93c5eec8d4eff0fc_city"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "country_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f1877997fe1a1bab211235772876ef/datasets/01f1877ac0df18ee93c5eec8d4eff0fc_country",
+                "query": {
+                  "datasetName": "current_weather_gold",
+                  "fields": [
+                    {
+                      "name": "country",
+                      "expression": "`country`"
+                    },
+                    {
+                      "name": "country_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Select Country",
+                "showTitle": true
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "country",
+                    "queryName": "dashboards/01f1877997fe1a1bab211235772876ef/datasets/01f1877ac0df18ee93c5eec8d4eff0fc_country"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 6,
+            "height": 3
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#F0F0F0",
+        "dark": "#121317"
+      },
+      "widgetBackgroundColor": {
+        "light": "#F0F0F0",
+        "dark": "#121317"
+      },
+      "widgetBorderColor": {
+        "light": "#171717",
+        "dark": "#9D9DA0"
+      },
+      "fontColor": {
+        "light": "#404040",
+        "dark": "#F7F5F2"
+      },
+      "selectionColor": {
+        "light": "#0061FE",
+        "dark": "#5A9FFF"
+      },
+      "visualizationColors": [
+        "#377EB8",
+        "#4DAF4A",
+        "#984EA3",
+        "#FF7F00",
+        "#FFFF33",
+        "#A65628",
+        "#F781BF"
+      ],
+      "widgetHeaderAlignment": "LEFT",
+      "fontFamily": "Roboto Mono",
+      "widgetPadding": 16,
+      "widgetMargin": 0,
+      "widgetCornerRadius": 0,
+      "widgetShadow": 0,
+      "continuousGradient": {
+        "lightMode": {
+          "fromCategoricalIndex": 0
+        },
+        "darkMode": {
+          "fromCategoricalIndex": 0
+        }
+      },
+      "fontSettings": {
+        "base": {
+          "fontFamily": "Roboto Mono",
+          "fontColor": {
+            "light": "#404040",
+            "dark": "#F7F5F2"
+          },
+          "fontSize": 13,
+          "fontWeight": 400
+        },
+        "widgetTitle": {
+          "fontSize": 15,
+          "fontWeight": 500
+        },
+        "widgetDescription": {
+          "fontSize": 13,
+          "fontWeight": 400
+        },
+        "fieldTitle": {
+          "textCase": "TEXT_CASE_UPPERCASE",
+          "fontColor": {
+            "light": "#535353",
+            "dark": "#DEDDDA"
+          },
+          "fontSize": 12,
+          "fontWeight": 400
+        },
+        "fieldValue": {
+          "fontColor": {
+            "light": "#535353",
+            "dark": "#DEDDDA"
+          },
+          "fontSize": 12,
+          "fontWeight": 400
+        }
+      },
+      "gridLineColor": {
+        "light": "#D1D1D1",
+        "dark": "#3B3B3E"
+      },
+      "axisLineColor": {
+        "light": "#C1C1C1",
+        "dark": "#4F5052"
+      }
+    },
+    "applyModeEnabled": false
+  }
+}
